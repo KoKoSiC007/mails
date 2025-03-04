@@ -1,0 +1,232 @@
+openapi: 3.0.3
+info:
+  title: Swagger Odyssey - OpenAPI 3.0
+  description: |-
+    This is simple api for working with currency rate and mails from smtp server
+  contact:
+    email: okint34@yandex.ru
+  version: 1.0.11
+servers:
+  - url: http://localhost/api/v1
+tags:
+  - name: currency
+    description: Everything about your Currency
+  - name: mail
+    description: Access to mails
+  - name: user
+    description: Operations about user
+paths:
+  /currencies:
+    get:
+      tags:
+        - currency
+      summary: Get currency report
+      operationId: getReport
+      parameters:
+        - name: startDate
+          in: query
+          description: Start date for report
+          required: true
+          schema:
+            type: string
+            format: date
+            example: '2018-03-20'
+        - name: endDate
+          in: query
+          description: End date for report
+          required: true
+          schema:
+            type: string
+            format: date
+            example: '2018-03-20'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Currency'
+        '422':
+          description: Validation exception
+      security:
+        - bearerAuth: []
+  /mail:
+    get:
+      tags:
+        - mail
+      summary: Get current mail for user
+      operationId: GetMails
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mails'
+      security:
+        - bearerAuth: []
+    post:
+      tags:
+        - mail
+      summary: Send mail to user
+      operationId: SendMail
+      requestBody:
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    to:
+                      type: string
+                      description: To mail
+                      example: 'kokos@mail.ru'
+                    data:
+                      type: string
+                      description: Body of mail
+                      example: Hello world
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mail'
+      security:
+        - bearerAuth: []
+  /user:
+    post:
+      tags:
+        - user
+      summary: Create user
+      description: This can only be done by the logged in user.
+      operationId: createUser
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        default:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /user/login:
+    get:
+      tags:
+        - user
+      summary: Logs user into the system
+      description: ''
+      operationId: loginUser
+      parameters:
+        - name: username
+          in: query
+          description: The user name for login
+          required: true
+          schema:
+            type: string
+        - name: password
+          in: query
+          description: The password for login in clear text
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+                description: User JWT token
+                example: testetstetstetstte
+        '400':
+          description: Invalid username/password supplied
+  /user/logout:
+    get:
+      tags:
+        - user
+      summary: Logs out current logged in user session
+      description: ''
+      operationId: logoutUser
+      parameters: []
+      responses:
+        default:
+          description: successful operation
+      security:
+        - bearerAuth: []
+components:
+  schemas:
+    Currency:
+      type: array
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Currency name
+            example: RUB
+          maxRate:
+            type: number
+            format: float
+            description: Maximum value for passed period
+            example: 32.4
+          minRate:
+            type: number
+            format: float
+            description: Minimum value for passed period
+            example: 32.4
+          avgRate:
+            type: number
+            format: float
+            description: Average value for passed period
+            example: 32.4
+    Mails:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mail'
+    Mail:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 1
+          description: ID of email
+        from:
+          type: string
+          example: kokos@mail.ru
+          description: From mail
+        to:
+          type: string
+          example: kokos@ya.ru
+          description: To mail
+        body:
+          type: string
+          example: Hello World!
+          description: Body of mail
+    User:
+      type: object
+      properties:
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: James
+        email:
+          type: string
+          example: john@email.com
+        password:
+          type: string
+          example: '12345'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      description: JWT Authorization header using the Bearer scheme
+      scheme: bearer
+      bearerFormat: JWT

@@ -1,0 +1,288 @@
+openapi: 3.0.3
+info:
+  title: Swagger Odissey - OpenAPI 3.0
+  description: This is simple api for working with currency rate and mails from smtp
+    server
+  contact:
+    email: okint34@yandex.ru
+  version: 1.0.11
+servers:
+- url: http://localhost/api/v1
+tags:
+- name: currency
+  description: Everything about your Currency
+- name: mail
+  description: Access to mails
+- name: user
+  description: Operations about user
+paths:
+  /currencies:
+    get:
+      tags:
+      - currency
+      summary: Get currency report
+      operationId: getReport
+      parameters:
+      - name: startDate
+        in: query
+        description: Start date for report
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date
+          example: 2018-03-20
+      - name: endDate
+        in: query
+        description: End date for report
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date
+          example: 2018-03-20
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Currency"
+        "422":
+          description: Validation exception
+      security:
+      - bearerAuth: []
+  /mail:
+    get:
+      tags:
+      - mail
+      summary: Get current mail for user
+      operationId: GetMails
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mails"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - mail
+      summary: Send mail to user
+      operationId: SendMail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/mail_body"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mail"
+      security:
+      - bearerAuth: []
+  /user:
+    post:
+      tags:
+      - user
+      summary: Create user
+      description: This can only be done by the logged in user.
+      operationId: createUser
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        default:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /user/login:
+    get:
+      tags:
+      - user
+      summary: Logs user into the system
+      description: ""
+      operationId: loginUser
+      parameters:
+      - name: username
+        in: query
+        description: The user name for login
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: password
+        in: query
+        description: The password for login in clear text
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+                description: User JWT token
+                example: testetstetstetstte
+                x-content-type: application/json
+        "400":
+          description: Invalid username/password supplied
+  /user/logout:
+    get:
+      tags:
+      - user
+      summary: Logs out current logged in user session
+      description: ""
+      operationId: logoutUser
+      parameters: []
+      responses:
+        default:
+          description: successful operation
+      security:
+      - bearerAuth: []
+components:
+  schemas:
+    Currency:
+      type: array
+      items:
+        $ref: "#/components/schemas/Currency_inner"
+      x-schema-name: Currency
+    Mails:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Mails_data"
+      example:
+        data:
+          messages:
+          - from: kokos@mail.ru
+            id: 1
+            to: kokos@ya.ru
+            body: Hello World!
+          - from: kokos@mail.ru
+            id: 1
+            to: kokos@ya.ru
+            body: Hello World!
+    Mail:
+      type: object
+      properties:
+        id:
+          type: number
+          description: ID of email
+          example: 1
+        from:
+          type: string
+          description: From mail
+          example: kokos@mail.ru
+        to:
+          type: string
+          description: To mail
+          example: kokos@ya.ru
+        body:
+          type: string
+          description: Body of mail
+          example: Hello World!
+      example:
+        from: kokos@mail.ru
+        id: 1
+        to: kokos@ya.ru
+        body: Hello World!
+    User:
+      type: object
+      properties:
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: James
+        email:
+          type: string
+          example: john@email.com
+        password:
+          type: string
+          example: "12345"
+      example:
+        firstName: John
+        lastName: James
+        password: "12345"
+        id: 10
+        email: john@email.com
+    mail_body:
+      type: object
+      properties:
+        to:
+          type: string
+          description: To mail
+          example: kokos@mail.ru
+        data:
+          type: string
+          description: Body of mail
+          example: Hello world
+    Currency_inner:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Currency name
+          example: RUB
+        maxRate:
+          type: number
+          description: Maximum value for passed period
+          format: float
+          example: 32.4
+        minRate:
+          type: number
+          description: Minimum value for passed period
+          format: float
+          example: 32.4
+        avgRate:
+          type: number
+          description: Average value for passed period
+          format: float
+          example: 32.4
+      example:
+        name: RUB
+        avgRate: 32.4
+        minRate: 32.4
+        maxRate: 32.4
+    Mails_data:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/Mail"
+      example:
+        messages:
+        - from: kokos@mail.ru
+          id: 1
+          to: kokos@ya.ru
+          body: Hello World!
+        - from: kokos@mail.ru
+          id: 1
+          to: kokos@ya.ru
+          body: Hello World!
+  securitySchemes:
+    bearerAuth:
+      type: http
+      description: JWT Authorization header using the Bearer scheme
+      scheme: bearer
+      bearerFormat: JWT
