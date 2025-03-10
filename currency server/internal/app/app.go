@@ -27,7 +27,7 @@ func NewApplication() *Application {
 		log.Fatal(err)
 	}
 
-	mailService := mail.NewMailService(&mail.Config{Addr: "mail:2626"})
+	mailService := mail.NewMailService(&mail.Config{Addr: "mail:2525"})
 
 	return &Application{db: db, mailService: mailService}
 }

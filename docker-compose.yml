@@ -46,7 +46,7 @@ services:
     depends_on:
       - dns
     ports:
-      - "2626:2626"
+      - "2626:2525"
     dns:
       - 172.16.0.100
     networks:

@@ -5,7 +5,6 @@ import (
 	"io"
 	"log"
 	"net"
-	"strconv"
 	"strings"
 
 	"os"
@@ -15,33 +14,23 @@ import (
 	senderservice "github.com/kokos/go-smtp-server/sender_service"
 )
 
-var domains = map[string]map[string]string{
-	"ya.ru": {
-		"addr": "mail.ya.ru",
-		"port": "2525",
-	},
-	"mail.ru": {
-		"addr": "mail.mail.ru",
-		"port": "2626",
-	},
-}
-
 func main() {
 	domain := os.Getenv("DOMAIN")
-	if domains[domain] == nil {
+	if domain == "" {
 		log.Fatal("Unknown domain name")
 	}
+	address, err := GetMailAddress(domain)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	senderService := senderservice.NewSenderService()
 	s := smtp.NewServer(&Backend{Domain: domain, SenderService: senderService})
-	s.Addr = ":" + domains[domain]["port"]
-	s.Domain = domains[domain]["addr"]
-	//s.WriteTimeout = 10 * time.Second
-	//s.ReadTimeout = 10 * time.Second
+	s.Addr = ":2525"
+	s.Domain = address
 	s.MaxMessageBytes = 1024 * 1024
 	s.MaxRecipients = 50
 	s.AllowInsecureAuth = true
-	r, _ := net.LookupTXT("mail._domainkey.orion.ru.")
-	fmt.Println(r)
 	log.Println("Starting server at: ", s.Addr)
 	if err := s.ListenAndServe(); err != nil {
 		log.Fatal(err)
@@ -124,7 +113,6 @@ func (s *Session) processMessage(data []byte) {
 }
 
 func (s *Session) verify(message []byte) error {
-	fmt.Println(string(message))
 	r := strings.NewReader(string(message))
 
 	verifications, err := dkim.Verify(r)
@@ -153,13 +141,27 @@ func (s *Session) verify(message []byte) error {
 func (s *Session) sendMail(from string, to string, data []byte) error {
 	domain := strings.Split(to, "@")[1]
 
-	host := domains[domain]["addr"]
-	port, _ := strconv.Atoi(domains[domain]["port"])
-	address := fmt.Sprintf("%s:%v", host, port)
-	err := s.senderService.SendMail(address, from, to, data)
+	host, err := GetMailAddress(domain)
+	if err != nil {
+		return err
+	}
+
+	address := fmt.Sprintf("%s:2525", host)
+	err = s.senderService.SendMail(address, from, to, data)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func GetMailAddress(domain string) (string, error) {
+	r, err := net.LookupMX(domain)
+	if err != nil {
+		return "", err
+	}
+	if len(r) != 1 {
+		return "", fmt.Errorf("DNS returns many MX records!")
+	}
+	return r[0].Host + domain, nil
 }
