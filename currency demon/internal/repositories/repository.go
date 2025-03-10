@@ -22,7 +22,7 @@ type Repo struct {
 }
 
 func NewRepo() (*Repo, error) {
-	dsn := "host=localhost user=postgres password=234492 dbname=currencies port=5432 sslmode=disable"
+	dsn := "postgres://postgres:234492@postgres:5432/currencies?sslmode=disable"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err

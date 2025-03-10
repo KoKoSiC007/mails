@@ -1,0 +1,103 @@
+version: '3.8'
+name: orion
+
+networks:
+  app-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.0.0/24
+
+services:
+  postgres:
+    image: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_PASSWORD: 234492
+      POSTGRES_DB: currencies
+    ports:
+      - "5432:5432"
+    networks:
+      app-network:
+        ipv4_address: 172.16.0.8
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web-app:
+    container_name: web
+    build:
+      context: /currency server
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    networks:
+      app-network:
+        ipv4_address: 172.16.0.2
+  
+  mail-server:
+    container_name: mail
+    build:
+      context: /mail server
+      dockerfile: Dockerfile
+    environment:
+      - DOMAIN=mail.ru
+    depends_on:
+      - dns
+    ports:
+      - "2626:2626"
+    dns:
+      - 172.16.0.100
+    networks:
+      app-network:
+        ipv4_address: 172.16.0.3
+
+  ya-server:
+    container_name: ya
+    build:
+      context: /mail server
+      dockerfile: Dockerfile
+    environment:
+      - DOMAIN=ya.ru
+    depends_on:
+      - dns
+    dns:
+      - 172.16.0.100
+    ports:
+      - "2525:2525"
+    networks:
+      app-network:
+        ipv4_address: 172.16.0.4
+  currency-demon:
+    container_name: currency_demon
+    build:
+      context: /currency demon
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+    networks:
+      app-network:
+        ipv4_address: 172.16.0.5
+
+  dns:
+    container_name: dns
+    image: sameersbn/bind:9.16.1-20200524
+    restart: always
+    ports:
+    - 53:53/tcp
+    - 53:53/udp
+    - 10000:10000
+    environment:
+      - WEBMIN_INIT_SSL_ENABLED=false
+      - ROOT_PASSWORD=SecretPassword
+    networks:
+      app-network:
+        ipv4_address: 172.16.0.100
+    volumes:
+    - /srv/docker/bind:/data
+    
+
+volumes:
+  postgres_data:
+  data:
