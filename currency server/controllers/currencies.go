@@ -33,29 +33,36 @@ func NewCurrencyController(db *gorm.DB) *CurrenciesController {
 	return &CurrenciesController{usecase: currencyUseCase}
 }
 
+type GetRatesBody struct {
+	StartDate  string   `json:"startDate"`
+	EndDate    string   `json:"endDate"`
+	Currencies []string `json:"currencies"`
+}
+
 func (c *CurrenciesController) GetRates(w http.ResponseWriter, r *http.Request) {
-	start := r.URL.Query().Get("startDate")
-	if len(start) == 0 {
-		c.errorResponse(w, "startDate is missing", http.StatusUnprocessableEntity)
+	var body GetRatesBody
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	err := decoder.Decode(&body)
+	if err != nil {
+		c.errorResponse(w, "Bad request "+err.Error(), http.StatusUnprocessableEntity)
+		return
 	}
 
-	end := r.URL.Query().Get("endDate")
-	if len(end) == 0 {
-		c.errorResponse(w, "endDate is missing", http.StatusUnprocessableEntity)
-	}
-
-	startDate, err := time.Parse("2006-01-02", start)
+	startDate, err := time.Parse("2006-01-02", body.StartDate)
 	if err != nil {
 		c.errorResponse(w, "Bad response"+err.Error(), http.StatusUnprocessableEntity)
 	}
-	endDate, err := time.Parse("2006-01-02", end)
+	endDate, err := time.Parse("2006-01-02", body.EndDate)
 	if err != nil {
 		c.errorResponse(w, "Bad response"+err.Error(), http.StatusUnprocessableEntity)
+		return
 	}
 
-	result, err := c.usecase.GetRates(startDate, endDate)
+	result, err := c.usecase.GetRates(startDate, endDate, body.Currencies)
 	if err != nil {
 		c.errorResponse(w, "Bad response"+err.Error(), http.StatusUnprocessableEntity)
+		return
 	}
 	jsonResp, _ := json.Marshal(result)
 	w.Header().Set("Content-Type", "application/json")

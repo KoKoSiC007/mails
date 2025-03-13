@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -25,10 +26,17 @@ func NewRateRepo(db *gorm.DB) (*RateRepo, error) {
 	return &RateRepo{db: db}, nil
 }
 
-func (repo *RateRepo) Get(start, end time.Time) (*[]DbRate, error) {
+func (repo *RateRepo) Get(start, end time.Time, currencies []string) (*[]DbRate, error) {
 	var rates []DbRate
-
-	result := repo.db.Where("created_at between @start and @end", sql.Named("start", start), sql.Named("end", end)).Find(&rates)
+	fmt.Println(currencies)
+	result := repo.db.Where(
+		"created_at between @start and @end",
+		sql.Named("start", start),
+		sql.Named("end", end),
+	).Where(
+		"name in @names",
+		sql.Named("names", currencies),
+	).Find(&rates)
 	if result.Error != nil {
 		return nil, result.Error
 	}

@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-func (u *CurrencyUseCase) GetRates(start, end time.Time) (*[]models.CurrencyInner, error) {
-	result, err := u.ratesRepo.Get(start, end)
+func (u *CurrencyUseCase) GetRates(start, end time.Time, currencies []string) (*[]models.CurrencyInner, error) {
+	result, err := u.ratesRepo.Get(start, end, currencies)
 	if err != nil {
 		return nil, err
 	}

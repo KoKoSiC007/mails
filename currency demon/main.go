@@ -12,10 +12,6 @@ import (
 	"github.com/go-co-op/gocron/v2"
 )
 
-type conf struct {
-	Currencies []string `yaml:currencies`
-}
-
 type Config struct {
 	Id       int    `json:"id"`
 	Name     string `json:"name"`
