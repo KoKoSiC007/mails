@@ -56,6 +56,9 @@ func (app *Application) GetMailService() *mail.MailService {
 func (app *Application) GetPublicKey() *rsa.PublicKey {
 	return app.tokenService.PublicKey
 }
+func (app *Application) GetPrivateKey() *rsa.PrivateKey {
+	return app.tokenService.PrivateKey
+}
 
 func (app *Application) SetRouter(router *http.Handler) {
 	app.router = router

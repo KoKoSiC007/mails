@@ -3,9 +3,10 @@ package verify
 import "crypto/rsa"
 
 type VerifyUseCase struct {
-	publicKey *rsa.PublicKey
+	publicKey  *rsa.PublicKey
+	privateKey *rsa.PrivateKey
 }
 
-func NewVerifyUseCase(key *rsa.PublicKey) (*VerifyUseCase, error) {
-	return &VerifyUseCase{publicKey: key}, nil
+func NewVerifyUseCase(pubKey *rsa.PublicKey, privKey *rsa.PrivateKey) (*VerifyUseCase, error) {
+	return &VerifyUseCase{publicKey: pubKey, privateKey: privKey}, nil
 }

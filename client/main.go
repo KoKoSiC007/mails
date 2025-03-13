@@ -6,8 +6,10 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -16,16 +18,16 @@ import (
 )
 
 func main() {
-	// Парсим приватный ключ
+	CreateSign()
+	CheckSign()
+}
+
+func CreateSign() {
 	privateKey, err := ReadKey()
 
-	// Сообщение для подписи
 	message := "Hello, Golang!"
-
-	// Вычисляем хеш сообщения
 	hash := sha256.Sum256([]byte(message))
 
-	// Создаем подпись
 	signature, err := rsa.SignPSS(
 		rand.Reader,
 		privateKey,
@@ -79,4 +81,72 @@ func SendRequest(message string, signature []byte) {
 	} else {
 		fmt.Println("Message not verify!")
 	}
+}
+
+type SignedMessage struct {
+	Message   string `json:"message"`
+	Signature []byte `json:"signature"`
+}
+
+func CheckSign() {
+	pubKey := GetPublicKey()
+	signedMessage := GetTestMessage()
+
+	hash := sha256.Sum256([]byte(signedMessage.Message))
+	err := rsa.VerifyPSS(
+		pubKey,
+		crypto.SHA256,
+		hash[:],
+		signedMessage.Signature,
+		nil,
+	)
+	if err != nil {
+		fmt.Errorf("Invalid signature")
+	}
+	fmt.Println("Signature valid!")
+}
+
+func GetPublicKey() *rsa.PublicKey {
+	urlP, err := url.Parse("http://localhost:8080")
+	if err != nil {
+		log.Fatal(err)
+	}
+	urlP.Path += "/api/v1/public_key"
+	resp, err := http.Get(urlP.String())
+
+	pubKeyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	pubKeyBlock, _ := pem.Decode(pubKeyBytes)
+	if pubKeyBlock == nil {
+		log.Fatal(fmt.Errorf("Parsing key error"))
+	}
+
+	pubKey, err := x509.ParsePKIXPublicKey(pubKeyBlock.Bytes)
+	if err != nil {
+		log.Fatal(err)
+	}
+	rsaPubKey := pubKey.(*rsa.PublicKey)
+	return rsaPubKey
+}
+
+func GetTestMessage() *SignedMessage {
+	urlP, err := url.Parse("http://localhost:8080")
+	if err != nil {
+		log.Fatal(err)
+	}
+	urlP.Path += "/api/v1/test_message"
+	resp, err := http.Get(urlP.String())
+
+	var signedMessage SignedMessage
+	decoder := json.NewDecoder(resp.Body)
+	decoder.DisallowUnknownFields()
+	err = decoder.Decode(&signedMessage)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &signedMessage
 }

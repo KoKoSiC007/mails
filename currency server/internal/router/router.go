@@ -38,7 +38,7 @@ func NewRouter(app *app.Application) {
 	userController := controllers.NewUserController(app.GetDb(), app.GetTokenService())
 	currencyController := controllers.NewCurrencyController(app.GetDb())
 	mailsController := controllers.NewMailController(app.GetDb(), app.GetTokenService(), app.GetMailService())
-	verifyController := controllers.NewVerifyController(app.GetPublicKey())
+	verifyController := controllers.NewVerifyController(app.GetPublicKey(), app.GetPrivateKey())
 
 	authorization := app.GetTokenService().ValidateToken
 
@@ -48,6 +48,18 @@ func NewRouter(app *app.Application) {
 			strings.ToUpper("Get"),
 			"/api/v1/verify",
 			verifyController.Verify,
+		},
+		Route{
+			"GetPublicKey",
+			strings.ToUpper("Get"),
+			"/api/v1/public_key",
+			verifyController.GetPublicKey,
+		},
+		Route{
+			"GetTestMessage",
+			strings.ToUpper("Get"),
+			"/api/v1/test_message",
+			verifyController.GetTestMessage,
 		},
 		Route{
 			"GetCurrencies",

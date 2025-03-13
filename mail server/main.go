@@ -132,12 +132,6 @@ func (s *Session) verify(message []byte) error {
 	return nil
 }
 
-// func (s *Session) LookupTXT(domain string) ([]string, error) {
-// 	var s1 string
-// 	s1 = "brisbane._domainkey.mail.ru TXT \"v=DKIM1; k=rsa; t=s; p=LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUEwV3JpQzh2ejBzNGtyTWEvZnhVTwpCczh3a2l6OG9laGNoTnlxQTNOVHgrOVJMa1VTL1NraXdRdkJvOG50NERETmwvQWIrUmxaYm5CV0ZoYS9lZVNzCitjUmk3UWRMNmV5MWo2dklYamhVMVNJOTBFaEttWUtITzNDRUVoWVRrRkZPVmdlNVZqQXI2R0NoWTNCSGQ5QkcKUFRicmduN29kM05ad1h0RWM2N2J4MWRJdExkNnFqYzRxYW1aSmw0bXBkU0Nwcy92SVNuL2x5QUt5VFRKdEdRQwoyNEhjVlphY3VtRDZHZEJVZ1V3TkVOVVBRS0lCRlNiT1dta3hOMkU5UnJ6RkZQUUJIOGN6SkNrSVpYQjhTVGdwCnJ6QTBJNzV6enVibURZeGpRRElNbk50cHBoYkVpZ21ZczJ3VituVy8rOXJyTWZ0Q1BXR3RoMUg3RkxDWXlNRTUKeHdJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==\""
-// 	return []string{s1}, nil
-// }
-
 func (s *Session) sendMail(from string, to string, data []byte) error {
 	domain := strings.Split(to, "@")[1]
 
