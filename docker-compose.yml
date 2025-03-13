@@ -76,6 +76,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - postgres
+      - web-app
     networks:
       app-network:
         ipv4_address: 172.16.0.5
@@ -95,9 +96,22 @@ services:
       app-network:
         ipv4_address: 172.16.0.100
     volumes:
-    - /srv/docker/bind:/data
+      - /srv/docker/bind:/data
+  
+  # frontend:
+  #   container_name: frontend
+  #   build:
+  #     context: /frontend/orion
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - postgres
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     app-network:
+  #       ipv4_address: 172.16.0.50
     
 
 volumes:
   postgres_data:
-  data:
+  bind:

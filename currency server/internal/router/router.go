@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 type UserController struct {
@@ -26,25 +27,45 @@ type Routes []Route
 
 func NewRouter(app *app.Application) {
 	router := mux.NewRouter()
+	c := cors.New(
+		cors.Options{
+			AllowedOrigins: []string{"*"},
+			AllowedHeaders: []string{"*"},
+			ExposedHeaders: []string{"Authorization"},
+		},
+	)
 
 	userController := controllers.NewUserController(app.GetDb(), app.GetTokenService())
 	currencyController := controllers.NewCurrencyController(app.GetDb())
 	mailsController := controllers.NewMailController(app.GetDb(), app.GetTokenService(), app.GetMailService())
+	verifyController := controllers.NewVerifyController(app.GetPublicKey())
 
 	authorization := app.GetTokenService().ValidateToken
 
 	var routes = Routes{
 		Route{
-			"GetReport",
+			"VerifyMessage",
+			strings.ToUpper("Get"),
+			"/api/v1/verify",
+			verifyController.Verify,
+		},
+		Route{
+			"GetCurrencies",
 			strings.ToUpper("Get"),
 			"/api/v1/currencies",
 			currencyController.Get,
+		},
+		Route{
+			"GetReport",
+			strings.ToUpper("Get"),
+			"/api/v1/currencies/report",
+			currencyController.GetRates,
 		},
 
 		Route{
 			"GetMails",
 			strings.ToUpper("Get"),
-			"/api/v1/mail",
+			"/api/v1/mails",
 			mailsController.Get,
 		},
 
@@ -64,7 +85,7 @@ func NewRouter(app *app.Application) {
 
 		Route{
 			"LoginUser",
-			strings.ToUpper("Get"),
+			strings.ToUpper("Post"),
 			"/api/v1/user/login",
 			userController.Auth,
 		},
@@ -84,6 +105,6 @@ func NewRouter(app *app.Application) {
 			Name(route.Name).
 			Handler(handler)
 	}
-
-	app.SetRouter(router)
+	r := c.Handler(router)
+	app.SetRouter(&r)
 }

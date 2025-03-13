@@ -1,56 +1,76 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
-	"os"
-	"time"
+	"net/http"
+	"net/url"
 
 	"example.com/m/v2/internal/repositories"
 	usecases "example.com/m/v2/internal/use_cases"
 	"github.com/go-co-op/gocron/v2"
-	"gopkg.in/yaml.v3"
 )
 
 type conf struct {
 	Currencies []string `yaml:currencies`
 }
 
-func main() {
-	var conf conf
-	file, err := os.ReadFile("conf.yaml")
-	if err != nil {
-		log.Fatal(err)
-	}
+type Config struct {
+	Id       int    `json:"id"`
+	Name     string `json:"name"`
+	Enable   bool   `json:"enable"`
+	Schedule string `json:"schedule"`
+}
 
-	err = yaml.Unmarshal(file, &conf)
-	if err != nil {
-		log.Fatal(err)
-	}
+func main() {
+	conf := GetConf()
+
 	repository, err := repositories.NewRepo()
 	if err != nil {
 		log.Fatal(err)
 	}
 	parser := usecases.NewInteractor(repository)
 
-	parser.Call(conf.Currencies)
 	s, err := gocron.NewScheduler()
 	if err != nil {
 		log.Fatal(err)
 	}
-	j, err := s.NewJob(
-		gocron.DurationJob(
-			12*time.Hour,
-		),
-		gocron.NewTask(parser.Call, conf.Currencies),
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
+	for _, val := range *conf {
+		j, err := s.NewJob(
+			gocron.CronJob(val.Schedule, true),
+			gocron.NewTask(parser.Call, []string{val.Name}),
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	fmt.Println(j.ID())
+		fmt.Println(j.ID())
+	}
 
 	s.Start()
 
 	select {}
+}
+
+func GetConf() *[]Config {
+	urlP, err := url.Parse("http://172.16.0.2:8080")
+	if err != nil {
+		log.Fatal(err)
+	}
+	urlP.Path += "/api/v1/currencies"
+
+	resp, err := http.Get(urlP.String())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	var data []Config
+	decoder := json.NewDecoder(resp.Body)
+	if err := decoder.Decode(&data); err != nil {
+		log.Fatal(err)
+	}
+
+	return &data
 }

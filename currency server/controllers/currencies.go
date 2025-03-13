@@ -20,8 +20,12 @@ func NewCurrencyController(db *gorm.DB) *CurrenciesController {
 	if err != nil {
 		log.Fatal(err)
 	}
+	ratesRepo, err := repositories.NewRateRepo(db)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	currencyUseCase, err := currencies.NewCurrencyCase(currencyRepo)
+	currencyUseCase, err := currencies.NewCurrencyCase(currencyRepo, ratesRepo)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -29,7 +33,7 @@ func NewCurrencyController(db *gorm.DB) *CurrenciesController {
 	return &CurrenciesController{usecase: currencyUseCase}
 }
 
-func (c *CurrenciesController) Get(w http.ResponseWriter, r *http.Request) {
+func (c *CurrenciesController) GetRates(w http.ResponseWriter, r *http.Request) {
 	start := r.URL.Query().Get("startDate")
 	if len(start) == 0 {
 		c.errorResponse(w, "startDate is missing", http.StatusUnprocessableEntity)
@@ -49,13 +53,26 @@ func (c *CurrenciesController) Get(w http.ResponseWriter, r *http.Request) {
 		c.errorResponse(w, "Bad response"+err.Error(), http.StatusUnprocessableEntity)
 	}
 
-	result, err := c.usecase.Get(startDate, endDate)
+	result, err := c.usecase.GetRates(startDate, endDate)
 	if err != nil {
 		c.errorResponse(w, "Bad response"+err.Error(), http.StatusUnprocessableEntity)
 	}
 	jsonResp, _ := json.Marshal(result)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResp)
+}
+
+func (c *CurrenciesController) Get(w http.ResponseWriter, r *http.Request) {
+	data, err := c.usecase.Get()
+	if err != nil {
+		c.errorResponse(w, "Bad request "+err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+
+	jsonResp, _ := json.Marshal(data)
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Write(jsonResp)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (c *CurrenciesController) errorResponse(w http.ResponseWriter, message string, httpStatusCode int) {

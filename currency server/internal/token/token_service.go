@@ -66,7 +66,7 @@ func (s *TokenService) ValidateToken(next http.Handler) http.Handler {
 
 func GenerateToken(user_id *uint, key *rsa.PrivateKey) (string, error) {
 	unixTime := time.Now().Unix()
-	tokenExp := unixTime + 60*15 //15 min
+	tokenExp := unixTime + 60*120 //120 min
 
 	claims := IDTokenCustomClaimns{
 		UserId: *user_id,

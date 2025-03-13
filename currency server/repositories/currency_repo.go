@@ -1,20 +1,20 @@
 package repositories
 
 import (
-	"database/sql"
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
 )
 
-type DbRate struct {
+type dbCurrency struct {
 	gorm.Model
-	ID        uint `gorm:"primaryKey"`
-	Name      string
-	Rate      float32
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt time.Time `gorm:"index"`
+	ID        uint      `gorm:"privateKey"`
+	Name      string    `gorm:"not null"`
+	Schedule  string    `gorm:"not null"`
+	Enable    bool      `gorm:"not null, default:true"`
+	CreatedAt time.Time `gorm:"not null"`
+	UpdatedAt time.Time `gorm:"not null"`
 }
 
 type CurrencyRepo struct {
@@ -22,16 +22,21 @@ type CurrencyRepo struct {
 }
 
 func NewCurrencyRepo(db *gorm.DB) (*CurrencyRepo, error) {
+	err := db.AutoMigrate(&dbCurrency{})
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	return &CurrencyRepo{db: db}, nil
 }
 
-func (repo *CurrencyRepo) Get(start, end time.Time) (*[]DbRate, error) {
-	var rates []DbRate
+func (repo *CurrencyRepo) Get() (*[]dbCurrency, error) {
+	var currencies []dbCurrency
 
-	result := repo.db.Where("created_at between @start and @end", sql.Named("start", start), sql.Named("end", end)).Find(&rates)
+	result := repo.db.Find(&currencies)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
-	return &rates, nil
+	return &currencies, nil
 }

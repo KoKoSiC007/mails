@@ -1,0 +1,11 @@
+$ttl 38400
+mail.ru.	IN	SOA	172.16.0.100. me.mail.ru. (
+			1741811953
+			10800
+			3600
+			604800
+			38400 )
+  IN	NS	172.16.0.100.
+mail.ru.	IN	MX	0 mail.
+mail.mail.ru.	IN	A	172.16.0.3
+mail._domainkey.mail.ru.	IN	TXT	"v=DKIM1;k=rsa;p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCj3cPMK0RFYoC1RuzFm8m/5+75DqkjkpD15EInind3bbWtSEkvJ/cxw7A6AJzuhXhLkkWwSgVfeArYIOPYbvjVN/nR4j6ildTfhV8q8aTWjPehAd63ENVB8lLWfwbwsW364yK0alDiTqahelTN7DBzv5IvrP03IyPCPtZAOIAD2wIDAQAB"

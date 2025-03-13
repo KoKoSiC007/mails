@@ -6,8 +6,9 @@ import (
 
 type CurrencyUseCase struct {
 	currencyRepo *repositories.CurrencyRepo
+	ratesRepo    *repositories.RateRepo
 }
 
-func NewCurrencyCase(repo *repositories.CurrencyRepo) (*CurrencyUseCase, error) {
-	return &CurrencyUseCase{currencyRepo: repo}, nil
+func NewCurrencyCase(currencyRepo *repositories.CurrencyRepo, rateRepo *repositories.RateRepo) (*CurrencyUseCase, error) {
+	return &CurrencyUseCase{currencyRepo: currencyRepo, ratesRepo: rateRepo}, nil
 }

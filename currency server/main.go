@@ -68,7 +68,7 @@ func main() {
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,
-		Handler:      app.GetRouter(),
+		Handler:      *app.GetRouter(),
 	}
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {

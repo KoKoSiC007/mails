@@ -1,50 +1,82 @@
 package main
 
 import (
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	"net/http"
+	"net/url"
+	"os"
+
 	"log"
-	"net/smtp"
 )
 
 func main() {
-	c, err := smtp.Dial("localhost:2626")
+	// Парсим приватный ключ
+	privateKey, err := ReadKey()
+
+	// Сообщение для подписи
+	message := "Hello, Golang!"
+
+	// Вычисляем хеш сообщения
+	hash := sha256.Sum256([]byte(message))
+
+	// Создаем подпись
+	signature, err := rsa.SignPSS(
+		rand.Reader,
+		privateKey,
+		crypto.SHA256,
+		hash[:],
+		nil,
+	)
 	if err != nil {
-		fmt.Println(1)
 		log.Fatal(err)
 	}
 
-	if err := c.Mail("kokos@mail.ru"); err != nil {
-		fmt.Println(2)
-		log.Fatal(err)
-	}
+	fmt.Printf("Подпись: %x\n", signature)
+	SendRequest(message, signature)
+}
 
-	if err := c.Rcpt("kokos@ya.ru"); err != nil {
-		fmt.Println(3)
-		log.Fatal(err)
-	}
-
-	wc, err := c.Data()
+func ReadKey() (*rsa.PrivateKey, error) {
+	privateKeyPEM, err := os.ReadFile("rsa_private_dev.pem")
 	if err != nil {
-		fmt.Println(4)
-		log.Fatal(err)
+		log.Fatalf("Failed to read private key: %v", err)
 	}
 
-	_, err = fmt.Fprintf(wc, "This is email body")
-	if err != nil {
-		fmt.Println(5)
-		log.Fatal(err)
+	block, _ := pem.Decode(privateKeyPEM)
+	if block == nil {
+		log.Fatalf("Failed to parse PEM block containing the private key")
 	}
 
-	err = wc.Close()
+	privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
-		fmt.Println(6)
-		log.Fatal(err)
+		log.Fatalf("Failed to parse private key: %v", err)
 	}
+	parsedKey := privateKey.(*rsa.PrivateKey)
+	return parsedKey, nil
+}
 
-	err = c.Quit()
+func SendRequest(message string, signature []byte) {
+	urlP, err := url.Parse("http://localhost:8080")
 	if err != nil {
-		fmt.Println(7)
 		log.Fatal(err)
 	}
-	fmt.Println("Message sended!")
+	urlP.Path += "/api/v1/verify"
+	parameters := url.Values{}
+	parameters.Add("data", message)
+	parameters.Add("signature", string(signature))
+	urlP.RawQuery = parameters.Encode()
+	resp, err := http.Get(urlP.String())
+	if err != nil {
+		log.Fatal(err)
+	}
+	if resp.StatusCode == 200 {
+		fmt.Println("Message verify!")
+	} else {
+		fmt.Println("Message not verify!")
+	}
 }

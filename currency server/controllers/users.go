@@ -50,7 +50,7 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 	jsonResp, _ := json.Marshal(createdUser)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Write(jsonResp)
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 }
 func (c *UserController) Auth(w http.ResponseWriter, r *http.Request) {
 	login := r.URL.Query().Get("login")
@@ -76,8 +76,7 @@ func (c *UserController) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Add("Authorization", token)
-
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 }
 
 func (c *UserController) errorResponse(w http.ResponseWriter, message string, httpStatusCode int) {
