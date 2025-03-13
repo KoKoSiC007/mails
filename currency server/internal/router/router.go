@@ -57,7 +57,7 @@ func NewRouter(app *app.Application) {
 		},
 		Route{
 			"GetReport",
-			strings.ToUpper("Get"),
+			strings.ToUpper("Post"),
 			"/api/v1/currencies/report",
 			currencyController.GetRates,
 		},

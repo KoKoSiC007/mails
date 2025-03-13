@@ -1,17 +1,32 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { APIClient } from "../internal/http"
 import { Form, Button } from "react-bootstrap"
+import Select from 'react-select';
 
 export const Currencies = () => {
     const [startValue, setStart] = useState()
     const [endValue, setEnd] = useState()
     const [cData, setCData] = useState([])
     const client = new APIClient()
-    
+    const [currencyOptions, setCurs] = useState([])
+    const [selectedCurs, setSelectedCurs] = useState([])
+
+    useEffect(() => {
+        client.get('/currencies').then(data => {
+            const allowedCurs = []
+            data.forEach(element => {
+                if (element.enable) {
+                    allowedCurs.push({value: element.name, label: element.name})
+                }
+            });
+            setCurs(allowedCurs)
+        }).catch(error => console.error(error))
+    }, [])
+
     const submit = (e) => {
         e.preventDefault()
-        console.warn(startValue, endValue)
-        client.get(`/currencies/report?startDate=${startValue}&endDate=${endValue}`).then(data => {
+        console.warn(startValue, endValue, selectedCurs)
+        client.post(`/currencies/report`, {startDate: startValue, endDate: endValue, currencies: selectedCurs.map((item, i) => item.value)}).then(data => {
             if (!!data) { 
                 setCData(data)
             } else {
@@ -53,11 +68,19 @@ export const Currencies = () => {
                         }}
                     />
                 </Form.Group>
+                <Select 
+                    options={currencyOptions}
+                    isMulti
+                    onChange={e => {
+                        setSelectedCurs(e)
+                    }}
+                    value={selectedCurs}
+                />
                 <Button
                 variant="primary"
                 type="submit"
                 className="w-100 mt-3"
-            > Show  </Button>
+                > Show </Button>
             </Form>
 
             <table>

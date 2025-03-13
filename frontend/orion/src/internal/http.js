@@ -19,7 +19,7 @@ export class APIClient {
             if (data) {
                 requestOptions.body = JSON.stringify(data);
             }
-
+            console.warn(`${this.baseUrl}${endpoint}`)
             const response = await fetch(`${this.baseUrl}${endpoint}`, requestOptions);
             const status = response.status;
 
@@ -28,6 +28,7 @@ export class APIClient {
                 if (status == 401) {
                     localStorage.clear()
                 }
+                console.error(response)
                 const error = await response.text();
                 throw new Error(`HTTP error ${status}: ${error}`);
             }
@@ -46,6 +47,7 @@ export class APIClient {
         } catch (error) {
             // Обрабатываем сетевые ошибки
             if (error.name === 'TypeError') {
+                console.error(error)
                 throw new Error('Network error: Unable to connect to the server');
             }
             throw error;
