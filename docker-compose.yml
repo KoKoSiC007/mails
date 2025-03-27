@@ -96,7 +96,7 @@ services:
       app-network:
         ipv4_address: 172.16.0.100
     volumes:
-      - /srv/docker/bind:/data
+      - dns_volume:/data
   
   # frontend:
   #   container_name: frontend
@@ -114,4 +114,4 @@ services:
 
 volumes:
   postgres_data:
-  bind:
+  dns_volume:

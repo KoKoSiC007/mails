@@ -100,8 +100,10 @@ func CheckSign() {
 		signedMessage.Signature,
 		nil,
 	)
+
 	if err != nil {
-		fmt.Errorf("Invalid signature")
+		fmt.Println("Invalid signature")
+		return
 	}
 	fmt.Println("Signature valid!")
 }

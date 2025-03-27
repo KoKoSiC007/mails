@@ -43,3 +43,9 @@ func (repo *RateRepo) Get(start, end time.Time, currencies []string) (*[]DbRate,
 
 	return &rates, nil
 }
+
+func (repo *RateRepo) Create(rate DbRate) error {
+	result := repo.db.Create(&rate)
+
+	return result.Error
+}

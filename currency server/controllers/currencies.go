@@ -82,6 +82,41 @@ func (c *CurrenciesController) Get(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func (c *CurrenciesController) Sync(w http.ResponseWriter, r *http.Request) {
+	var body GetRatesBody
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	err := decoder.Decode(&body)
+	if err != nil {
+		c.errorResponse(w, "Bad request "+err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+
+	startDate, err := time.Parse("2006-01-02", body.StartDate)
+	if err != nil {
+		c.errorResponse(w, "Bad response"+err.Error(), http.StatusUnprocessableEntity)
+	}
+	endDate, err := time.Parse("2006-01-02", body.EndDate)
+	if err != nil {
+		c.errorResponse(w, "Bad response"+err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+	err = c.usecase.Sync(startDate, endDate, body.Currencies)
+	if err != nil {
+		c.errorResponse(w, "Bad response"+err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+
+	result, err := c.usecase.GetRates(startDate, endDate, body.Currencies)
+	if err != nil {
+		c.errorResponse(w, "Bad response"+err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+	jsonResp, _ := json.Marshal(result)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResp)
+}
+
 func (c *CurrenciesController) errorResponse(w http.ResponseWriter, message string, httpStatusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(httpStatusCode)

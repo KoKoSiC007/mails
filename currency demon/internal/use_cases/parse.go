@@ -111,7 +111,6 @@ func (i *Interactor) filter(rates []entities.Rate, filter []string) []entities.R
 		}
 	}
 	return result
-
 }
 
 func (i *Interactor) save(rates []entities.Rate) error {

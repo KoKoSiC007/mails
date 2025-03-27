@@ -18,7 +18,7 @@ func (u *VerifyUseCase) Check(data string, signature []byte) error {
 		nil,
 	)
 	if err != nil {
-		fmt.Errorf("Invalid signature")
+		return fmt.Errorf("Invalid signature")
 	}
 
 	return nil
